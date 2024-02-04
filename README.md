@@ -1,0 +1,84 @@
+<div align="center">
+  <h1>adbir</h1>
+  <b>A</b>nother <b>D</b>ashboard <b>B</b>ut <b>I</b>n <b>R</b>ust
+</div>
+
+## About
+
+A dashboard inspired by [Homer](https://github.com/bastienwirtz/homer), both in
+design and configuration.
+
+While I enjoy the configurability and relatively minimalist design of Homer, I
+dislike its hard dependency on JavaScript to render the page. This is a stripped
+down rewrite of Homer without any JavaScript.
+
+## Configuring
+
+Runtime arguments to configure the program can be provided either with CLI
+arguments or environment variables.
+
+```
+Usage: adbir [OPTIONS]
+
+Options:
+      --out-dir <OUT_DIR>          directory to output generated resources [env: OUT_DIR=] [default: ./out]
+      --config-path <CONFIG_PATH>  path to config file [env: CONFIG_PATH=] [default: ./config.yaml]
+  -h, --help                       Print help
+  -V, --version                    Print version
+```
+
+The config file is inspired by a subset of Homer configuration options.
+
+```yaml
+title: Dashboard
+subtitle: A list of services
+
+services:
+  - name: Application group
+    items:
+      - name: Selfhosted app
+        url: https://selfhosted.local
+        logo: /icons/svg/files.svg
+        subtitle: Cool selfhosted app
+      - name: Another selfhosted app
+        url: https://otherselfhosted.local
+        logo: /icons/svg/another.svg
+        subtitle: Another cool selfhosted app
+  - name: Another application group
+    items:
+      - name: Other app
+        url: https://otherapp.local
+        logo: /icons/svg/other.svg
+        subtitle: Another app
+```
+
+## Running
+
+### Pre-built binary (coming soon)
+
+Download the latest binary from the releases. Then, run:
+
+```
+$ adbir
+Started with args: Args { out_dir: "./out", config_path: "./config.yaml" }
+Reading from ./config.yaml
+Opening output directory file
+Rending and writing template to output file
+$
+```
+
+This will generate a static `index.html` in the desired output directory. Upload
+this file to your desired webserver to serve.
+
+### Building from source
+
+```
+$ cargo run --release
+    Finished release [optimized] target(s) in 0.02s
+     Running `target/release/adbir`
+Started with args: Args { out_dir: "./out", config_path: "./config.yaml" }
+Reading from ./config.yaml
+Opening output directory file
+Rending and writing template to output file
+$
+```

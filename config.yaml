@@ -1,0 +1,144 @@
+title: wuhoo.xyz
+subtitle: A full list of wuhoo.xyz services. Some services may be internal-only.
+
+services:
+  - name: Federated
+    items:
+      - name: Element
+        url: https://element.wuhoo.xyz
+        logo: /icons/svg/element.svg
+        subtitle: Federated, E2EE messaging
+      - name: Cinny
+        url: https://cinny.wuhoo.xyz
+        logo: /icons/svg/cinny.svg
+        subtitle: Yet another Matrix client
+      - name: Matrix Synapse
+        url: https://matrix.wuhoo.xyz/_matrix/static
+        logo: /icons/svg/matrix-synapse.svg
+        subtitle: Federated protocol
+      - name: Matrix Federation Tester
+        url: https://federationtester.wuhoo.xyz
+        logo: /icons/svg/matrix.svg
+        subtitle: Tool to test Matrix federation
+  - name: Media
+    items:
+      - name: Jellyfin
+        url: https://jellyfin.wuhoo.xyz
+        logo: /icons/svg/jellyfin.svg
+        subtitle: Media server
+      - name: Jellyfin Vue
+        url: https://jf-vue.wuhoo.xyz
+        logo: /icons/png/jellyfin-vue.png
+        subtitle: Alternative Jellyfin frontend
+      - name: Jellyseerr
+        url: https://jellyseerr.wuhoo.xyz
+        logo: /icons/svg/jellyseerr.svg
+        subtitle: Media request service
+      - name: Komga
+        url: https://komga.wuhoo.xyz
+        logo: /icons/svg/komga.svg
+        subtitle: Comic book library
+  - name: Cloud services
+    items:
+      - name: GitLab
+        url: https://gitlab.wuhoo.xyz
+        logo: /icons/svg/gitlab.svg
+        subtitle: GitLab instance
+      - name: Nextcloud
+        url: https://cloud.wuhoo.xyz
+        logo: /icons/svg/nextcloud.svg
+        subtitle: File share and collaboration platform
+      - name: Vaultwarden
+        url: https://vaultwarden.wuhoo.xyz
+        logo: /icons/svg/vaultwarden.svg
+        subtitle: Password manager
+      - name: Immich
+        url: https://photos.wuhoo.xyz
+        logo: /icons/svg/immich.svg
+        subtitle: Self-hosted photo and video backup solution
+      - name: Send
+        url: https://send.wuhoo.xyz
+        logo: /icons/svg/firefox-send.svg
+        subtitle: Client-side encrypted file sharing
+      - name: Privatebin
+        url: https://privatebin.wuhoo.xyz
+        logo: /icons/svg/privatebin.svg
+        subtitle: Zero-knowledge encrypted pastebin
+      - name: Hat.sh
+        url: https://hatsh.wuhoo.xyz
+        logo: /icons/svg/hatsh.svg
+        subtitle: Simple, fast, secure client-side file encryption
+  - name: Misc
+    items:
+      - name: Authentik
+        url: https://auth.wuhoo.xyz
+        logo: /icons/png/authentik.png
+        subtitle: Identity provider and Single Sign-On
+      - name: Ntfy
+        url: https://ntfy.wuhoo.xyz
+        logo: /icons/svg/ntfy.svg
+        subtitle: Push notifications
+      - name: Gotify
+        url: https://gotify.wuhoo.xyz
+        logo: /icons/svg/gotify.svg
+        subtitle: Push notifications
+      - name: Librespeed
+        url: https://speedtest.wuhoo.xyz
+        logo: /icons/svg/librespeed.svg
+        subtitle: Internet speedtest
+      - name: Wiki
+        url: https://wiki.wuhoo.xyz
+        logo: /icons/png/wikijs.png
+        subtitle: wiki.js instance
+      - name: Arch Linux mirror
+        url: https://mirror.wuhoo.xyz
+        logo: /icons/svg/arch.svg
+        subtitle: Arch Linux repositories mirror
+      - name: AUR packages
+        url: https://aur.wuhoo.xyz
+        logo: /icons/svg/arch.svg
+        subtitle: Repository for packages built from AUR
+  - name: Downloads
+    items:
+      - name: Sonarr (Internal)
+        logo: /icons/svg/sonarr.svg
+        subtitle: TV series PVR system
+        url: https://sonarr.wuhoo.xyz
+      - name: Radarr (Internal)
+        logo: /icons/svg/radarr.svg
+        subtitle: Movies PVR system
+        url: https://radarr.wuhoo.xyz
+      - name: Prowlarr (Internal)
+        logo: /icons/svg/prowlarr.svg
+        subtitle: Indexers
+        url: https://prowlarr.wuhoo.xyz
+      - name: Transmission (Internal)
+        logo: /icons/svg/transmission.svg
+        subtitle: P2P torrent client
+        url: https://transmission.wuhoo.xyz
+  - name: Management
+    items:
+      - name: Proxmox VE (Internal)
+        logo: /icons/svg/proxmox.svg
+        subtitle: Proxmox Virtual Environment web management
+        url: https://pve.wuhoo.xyz
+      - name: OPNsense (Internal)
+        logo: /icons/svg/opnsense.svg
+        subtitle: Open-source firewall
+        url: https://kizu.wuhoo.xyz:8443
+      - name: Portainer (Internal)
+        logo: /icons/svg/portainer.svg
+        subtitle: Docker and Kubernetes management dashboard
+        url: https://portainer.wuhoo.xyz
+      - name: Ceph Dashboard (Internal)
+        logo: /icons/svg/ceph.svg
+        subtitle: Distributed object, block, and file storage platform
+        url: https://10.40.0.30:8443/
+      - name: Grafana (Internal)
+        logo: /icons/svg/grafana.svg
+        subtitle: Data visualization platform
+        url: https://grafana.wuhoo.xyz
+      - name: Uptime Kuma
+        logo: /icons/svg/uptime-kuma.svg
+        subtitle: Uptime monitoring
+        url: https://uptime.wuhoo.xyz

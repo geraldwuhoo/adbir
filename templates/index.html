@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Adbir</title>
+    <base target="_blank">
+    <style>
+        body {
+            max-width: 60em;
+            margin: 40px auto;
+            padding: 0 2em;
+            font: 18px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            overflow-x: hidden;
+        }
+
+        @media (prefers-color-scheme: light) {
+            body {
+                color: #222;
+                background: #f5f5f5;
+            }
+
+            a {
+                color: #333;
+                background-color: #fff;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                color: #c9d1d9;
+                background: #000;
+            }
+
+            a {
+                color: #d9d1d9;
+                background-color: #111;
+            }
+        }
+
+        @media (max-width: 40em) {
+            ul {
+                grid-template-columns: repeat(1, 100%);
+            }
+        }
+
+        @media (min-width: 40em) {
+            ul {
+                grid-template-columns: repeat(2, 50%);
+            }
+        }
+
+        @media (min-width: 60em) {
+            ul {
+                grid-template-columns: repeat(3, 33.33%);
+            }
+        }
+
+        header {
+            text-align: center;
+        }
+
+        h1,
+        h2,
+        h3 {
+            line-height: 1.2;
+        }
+
+        h3.servicegroup {
+            font-size: 1.35em;
+        }
+
+        .subtitle {
+            font-size: 0.8em;
+        }
+
+        a {
+            text-decoration: none;
+            transition: 0.25s ease;
+            border-radius: 0.5em/0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        a:hover {
+            opacity: 0.7;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            column-gap: 0.5em;
+        }
+
+        li {
+            padding: 0.5em;
+        }
+
+        .box {
+            display: flex;
+            align-items: center;
+
+            & .left {
+                align-items: left;
+                margin-right: 0.5em;
+            }
+
+            & .right {
+                margin: 0 auto 0 0;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>{{ config.title }}</h1>
+        <h4>{{ config.subtitle }}</h4>
+    </header>
+    <main>
+        {% for servicegroup in config.services -%}
+        <h3 class="servicegroup">{{ servicegroup.name }}</h3>
+        <ul>
+            {% for service in servicegroup.items -%}
+            <a href="{{ service.url }}">
+                <li>
+                    <div class="box">
+                        <div class="left">
+                            <img width="35px" src="{{ service.logo }}" atl="{{ service.name }} logo">
+                        </div>
+                        <div class="right">
+                            <b>{{ service.name }}</b><br>
+                            <span class="subtitle">{{ service.subtitle }}</span>
+                        </div>
+                    </div>
+                </li>
+            </a>
+            {% endfor -%}
+        </ul>
+        {% endfor -%}
+    </main>
+</body>
+
+</html>
