@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum AbdirError {
+pub enum AdbirError {
     #[error("serde_yaml error\n{0}")]
     SerdeYamlError(#[from] serde_yaml::Error),
 

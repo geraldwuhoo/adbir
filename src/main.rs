@@ -9,7 +9,7 @@ use std::{
     path::Path,
 };
 
-use crate::helpers::errors::AbdirError;
+use crate::helpers::errors::AdbirError;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -53,7 +53,7 @@ struct HomeTemplate {
     config: Config,
 }
 
-fn main() -> Result<(), AbdirError> {
+fn main() -> Result<(), AdbirError> {
     let args = Args::parse();
     println!("Started with args: {:?}", args);
 
