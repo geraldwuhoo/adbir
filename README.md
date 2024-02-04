@@ -3,6 +3,17 @@
   <b>A</b>nother <b>D</b>ashboard <b>B</b>ut <b>I</b>n <b>R</b>ust
 </div>
 
+- [About](#about)
+- [Configuring](#configuring)
+  - [Root](#root)
+  - [`.services`](#services)
+  - [`.services.items`](#servicesitems)
+  - [Example](#example)
+- [Running](#running)
+  - [Pre-built binary](#pre-built-binary)
+  - [Docker container](#docker-container)
+  - [Building from source](#building-from-source)
+
 ## About
 
 A dashboard inspired by [Homer](https://github.com/bastienwirtz/homer), both in
@@ -28,6 +39,32 @@ Options:
 ```
 
 The config file is inspired by a subset of Homer configuration options.
+
+### Root
+
+| Field | Description |
+| --- | --- |
+| `title` | Title of the dashboard |
+| `subtitle` | Subtitle of the dashboard displayed underneath title |
+| `services` | List of service groups |
+
+### `.services`
+
+| Field | Description |
+| --- | --- |
+| `name` | Name of service group |
+| `items` | List of service groups |
+
+### `.services.items`
+
+| Field | Description |
+| --- | --- |
+| `name` | Name of service |
+| `subtitle` | Description of service |
+| `url` | URL to the service |
+| `logo` | Logo of the service to display |
+
+### Example
 
 ```yaml
 title: Dashboard
