@@ -54,7 +54,7 @@ services:
 
 ## Running
 
-### Pre-built binary (coming soon)
+### Pre-built binary
 
 Download the latest binary from the releases. Then, run:
 
@@ -69,6 +69,37 @@ $
 
 This will generate a static `index.html` in the desired output directory. Upload
 this file to your desired webserver to serve.
+
+### Docker container
+
+The Docker container generates the static files on startup and serves them
+using a bundled lightweight webserver (`darkhttpd`). The webserver serves files
+from `/public` in the container.
+
+An example `docker-compose.yaml`.
+
+```yaml
+---
+version: '2'
+
+services:
+  adbir:
+    image: registry.wuhoo.xyz/jerry/adbir:v0.1.0
+    environment:
+      OUT_DIR: /public
+      CONFIG_PATH: /config.yaml
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config.yaml:/config.yaml
+```
+
+Then run:
+
+```
+$ docker-compose up -d
+$
+```
 
 ### Building from source
 
