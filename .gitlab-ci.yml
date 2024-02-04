@@ -1,0 +1,199 @@
+stages:
+  - lint
+  - build
+  - push
+  - release
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_REF_PROTECTED == "true"
+
+variables:
+  DOCKERIO_MIRROR: hub.wuhoo.xyz
+  CARGO_HOME: ${CI_PROJECT_DIR}/.cargo
+
+.cache:
+  cache:
+    untracked: false
+    paths:
+      - .cargo/.crates.toml
+      - .cargo/.crates2.json
+      - .cargo/bin/
+      - .cargo/registry/index/
+      - .cargo/registry/cache/
+      - target/
+
+.lint:
+  extends: .cache
+  stage: lint
+  image: docker.io/library/rust:1.75.0
+  before_script:
+    - cargo version
+    - rustup component add clippy
+    - rustup component add rustfmt
+
+.build_binary:
+  extends: .cache
+  stage: build
+  image: docker.io/library/rust:1.75.0
+  needs: &build_needs
+    - lint:clippy
+    - lint:format
+  before_script:
+    - cargo version
+  artifacts:
+    untracked: false
+    expire_in: 7 days
+
+.build_binary:gnu:
+  extends: .build_binary
+  script:
+    - cargo install --locked --target x86_64-unknown-linux-gnu --path .
+    - mv -v ${CARGO_HOME}/bin/${CI_PROJECT_NAME} ${CI_PROJECT_NAME}_x86_64-unknown-linux-gnu
+  cache:
+    key: gnu
+  artifacts:
+    paths:
+      - ${CI_PROJECT_NAME}_x86_64-unknown-linux-gnu
+
+.build_binary:musl:
+  extends: .build_binary
+  script:
+    - rustup target add x86_64-unknown-linux-musl
+    - apt update
+    - apt install -y musl-tools musl-dev
+    - cargo install --locked --target x86_64-unknown-linux-musl --path .
+    - mv -v ${CARGO_HOME}/bin/${CI_PROJECT_NAME} ${CI_PROJECT_NAME}_x86_64-unknown-linux-musl
+  cache:
+    key: musl
+  artifacts:
+    paths:
+      - ${CI_PROJECT_NAME}_x86_64-unknown-linux-musl
+
+.non-release:
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: on_success
+
+.release:
+  artifacts:
+    expire_in: never
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: on_success
+
+.push:
+  stage: push
+  image:
+    name: gcr.io/go-containerregistry/crane/debug:v0.15.2
+    entrypoint: [""]
+  needs:
+    - build:container
+
+lint:clippy:
+  extends:
+    - .lint
+  cache:
+    key: clippy
+  script:
+    - cargo clippy -- -D warnings
+
+lint:format:
+  extends:
+    - .lint
+  cache:
+    key: format
+  script:
+    - cargo fmt -- --check
+
+build:container:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.20.0-debug
+    entrypoint: [""]
+  needs: *build_needs
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+  script:
+    - >-
+      /kaniko/executor
+      --registry-mirror "${DOCKERIO_MIRROR}"
+      --cache=true
+      --cache-repo "${CI_REGISTRY_IMAGE}/build-cache"
+      --cache-ttl 168h0m0s
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --destination=image
+      --no-push
+      --tarPath image.tar
+  artifacts:
+    untracked: false
+    expire_in: 1 day
+    paths:
+      - image.tar
+    when: on_success
+
+build:binary:gnu:
+  extends:
+    - .build_binary:gnu
+    - .non-release
+
+build:binary:musl:
+  extends:
+    - .build_binary:musl
+    - .non-release
+
+build:binary:gnu:release:
+  extends:
+    - .build_binary:gnu
+    - .release
+
+build:binary:musl:release:
+  extends:
+    - .build_binary:musl
+    - .release
+
+push:
+  extends: .push
+  script:
+    - crane auth login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+    - crane push image.tar ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
+    - crane push image.tar ${CI_REGISTRY_IMAGE}:latest
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+
+push:release:
+  extends:
+    - .push
+    - .release
+  script:
+    - crane auth login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+    - crane push image.tar ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
+    - crane push image.tar ${CI_REGISTRY_IMAGE}:stable
+
+release:
+  extends: .release
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:v0.16.0
+  needs:
+    - build:binary:gnu:release
+    - build:binary:musl:release
+    - push:release
+  script:
+    - echo "Creating release for $CI_COMMIT_TAG"
+  release:
+    name: "Release $CI_COMMIT_TAG"
+    description: './release-notes/$CI_COMMIT_TAG/CHANGELOG.md'
+    tag_name: "$CI_COMMIT_TAG"
+    ref: "$CI_COMMIT_TAG"
+    assets:
+      links:
+        - name: '${CI_PROJECT_NAME}_x86_64-unknown-linux-gnu'
+          url: '$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/${CI_PROJECT_NAME}_x86_64-unknown-linux-gnu?job=build:binary:gnu:release'
+        - name: '${CI_PROJECT_NAME}_x86_64-unknown-linux-musl'
+          url: '$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/${CI_PROJECT_NAME}_x86_64-unknown-linux-musl?job=build:binary:musl:release'
