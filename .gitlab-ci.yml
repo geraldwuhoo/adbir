@@ -113,7 +113,7 @@ lint:format:
 build:container:
   stage: build
   image:
-    name: gcr.io/kaniko-project/executor:v1.20.0-debug
+    name: gcr.io/kaniko-project/executor:v1.20.1-debug
     entrypoint: [""]
   needs: *build_needs
   before_script:
