@@ -9,7 +9,7 @@ edition = "2021"
 askama = "0.12.1"
 clap = { version = "4.5.3", features = ["derive", "env"] }
 serde = { version = "1.0.197", features = ["derive"] }
-serde_yaml = "0.9.33"
+serde_yaml = "0.9.34"
 thiserror = "1.0.58"
 
 [profile.release]
