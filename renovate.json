@@ -6,5 +6,12 @@
     ":automergePr",
     ":automergeRequireAllStatusChecks",
     ":enablePreCommit"
-  ]
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "extends":["schedule:weekly"]
+  },
+  "nix": {
+    "enabled": true
+  }
 }
