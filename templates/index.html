@@ -114,11 +114,18 @@
                 text-overflow: ellipsis;
             }
         }
+
+        .logo {
+            border-radius: 50%;
+        }
     </style>
 </head>
 
 <body>
     <header>
+        {% if let Some(image) = config.image -%}
+        <img width="150px" class="logo" src="{{ image }}">
+        {% endif -%}
         <h1>{{ config.title }}</h1>
         <h4>{{ config.subtitle }}</h4>
     </header>
