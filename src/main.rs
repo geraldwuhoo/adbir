@@ -68,11 +68,6 @@ fn main() -> Result<(), AdbirError> {
         .truncate(true)
         .open(Path::new(&args.out_dir).join("index.html"))?;
 
-    if let Some(image_path) = &config.image {
-        println!("Copying image to output directory");
-        std::fs::copy(image_path, Path::new(&args.out_dir).join(image_path))?;
-    }
-
     println!("Rendering and writing template to output file");
     HomeTemplate { config }.write_into(&mut BufWriter::new(out_file))?;
 
