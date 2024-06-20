@@ -31,7 +31,7 @@ struct ServiceGroup {
 #[serde(deny_unknown_fields)]
 struct Config {
     title: String,
-    subtitle: String,
+    subtitle: Option<String>,
     image: Option<String>,
     services: Vec<ServiceGroup>,
 }

@@ -23,6 +23,7 @@
           pkg-config
           cargo-audit
           pre-commit
+          cargo-watch
         ];
       in {
         devShells.default = pkgs.mkShell {

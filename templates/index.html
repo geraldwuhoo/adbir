@@ -127,7 +127,9 @@
         <img width="150px" class="logo" src="{{ image }}">
         {% endif -%}
         <h1>{{ config.title }}</h1>
-        <h4>{{ config.subtitle }}</h4>
+        {% if let Some(subtitle) = config.subtitle -%}
+        <h4>{{ subtitle }}</h4>
+        {% endif -%}
     </header>
     <main>
         {% for servicegroup in config.services -%}
