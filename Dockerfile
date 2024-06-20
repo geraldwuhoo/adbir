@@ -21,7 +21,7 @@ COPY . .
 RUN cargo build --release --target x86_64-unknown-linux-musl --bin adbir
 
 # darkhttpd webserver to generate and host the files
-FROM docker.io/library/alpine:3.20.0
+FROM docker.io/library/alpine:3.20.1
 
 ENV UID 1000
 ENV GID 1000
