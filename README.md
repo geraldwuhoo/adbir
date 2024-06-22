@@ -42,33 +42,35 @@ The config file is inspired by a subset of Homer configuration options.
 
 ### Root
 
-| Field | Description |
-| --- | --- |
-| `title` | Title of the dashboard |
-| `subtitle` | Subtitle of the dashboard displayed underneath title |
-| `services` | List of service groups |
+| Field | Description | Required |
+| --- | --- | --- |
+| `title` | Title of the dashboard | Required |
+| `subtitle` | Subtitle of the dashboard displayed underneath title | Optional |
+| `image` | URL to image to display at the top of the page (e.g. logo) | Optional |
+| `services` | List of service groups | Required |
 
 ### `.services`
 
-| Field | Description |
-| --- | --- |
-| `name` | Name of service group |
-| `items` | List of service groups |
+| Field | Description | Required |
+| --- | --- | --- |
+| `name` | Name of service group | Required |
+| `items` | List of service groups | Required |
 
 ### `.services.items`
 
-| Field | Description |
-| --- | --- |
-| `name` | Name of service |
-| `subtitle` | Description of service |
-| `url` | URL to the service |
-| `logo` | Logo of the service to display |
+| Field | Description | Required |
+| --- | --- | --- |
+| `name` | Name of service | Required |
+| `subtitle` | Description of service | Required |
+| `url` | URL to the service | Required |
+| `logo` | Logo of the service to display | Required |
 
 ### Example
 
 ```yaml
 title: Dashboard
 subtitle: A list of services
+image: logo.webp
 
 services:
   - name: Application group
@@ -121,7 +123,7 @@ version: '2'
 
 services:
   adbir:
-    image: registry.wuhoo.xyz/jerry/adbir:v0.1.0
+    image: registry.wuhoo.xyz/jerry/adbir:v0.1.2
     environment:
       OUT_DIR: /public
       CONFIG_PATH: /config.yaml
