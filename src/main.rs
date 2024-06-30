@@ -16,7 +16,7 @@ use crate::helpers::errors::AdbirError;
 struct Service {
     name: String,
     url: String,
-    logo: String,
+    logo: Option<String>,
     subtitle: String,
 }
 

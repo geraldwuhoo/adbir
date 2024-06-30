@@ -80,10 +80,10 @@
             transition: 0.25s ease;
             border-radius: 0.5em/0.5em;
             margin-bottom: 0.5em;
-        }
 
-        a:hover {
-            opacity: 0.7;
+            &:hover {
+                opacity: 0.7;
+            }
         }
 
         ul {
@@ -139,9 +139,11 @@
             <a href="{{ service.url }}">
                 <li>
                     <div class="box">
+                        {% if let Some(logo) = service.logo -%}
                         <div class="left">
-                            <img width="35px" src="{{ service.logo }}" atl="{{ service.name }} logo">
+                            <img width="35px" src="{{ logo }}" alt="{{ service.name }} logo">
                         </div>
+                        {% endif -%}
                         <div class="right">
                             <b>{{ service.name }}</b><br>
                             <span class="subtitle">{{ service.subtitle }}</span>
