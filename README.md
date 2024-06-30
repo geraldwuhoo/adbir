@@ -63,7 +63,7 @@ The config file is inspired by a subset of Homer configuration options.
 | `name` | Name of service | Required |
 | `subtitle` | Description of service | Required |
 | `url` | URL to the service | Required |
-| `logo` | Logo of the service to display | Required |
+| `logo` | URL to logo of the service | Optional |
 
 ### Example
 
@@ -114,6 +114,11 @@ this file to your desired webserver to serve.
 The Docker container generates the static files on startup and serves them
 using a bundled lightweight webserver (`darkhttpd`). The webserver serves files
 from `/public` in the container.
+
+There are two flavors of the Docker container:
+
+1. Vanilla: `adbir:<tag>`. This version of the container just contains the webserver and nothing more.
+1. Dashboard Icons: `adbir:<tag>-dashboard-icons`. This version of the container also bundles [dashboard-icons](https://github.com/walkxcode/dashboard-icons) served at `/icons` in the webserver.
 
 An example `docker-compose.yaml`.
 
