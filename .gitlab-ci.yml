@@ -123,14 +123,20 @@ build:container:
       --cache-ttl 168h0m0s
       --tag ${CI_PROJECT_NAME}
       --file Dockerfile
+      --build-arg "ICONS=${ICONS}"
       .
-    - buildah push localhost/${CI_PROJECT_NAME} docker-archive:image.tar
+    - buildah push localhost/${CI_PROJECT_NAME} docker-archive:image-${ICONS}.tar
   artifacts:
     untracked: false
     expire_in: 1 day
     paths:
-      - image.tar
+      - image-${ICONS}.tar
     when: on_success
+  parallel:
+    matrix:
+      - ICONS:
+          - no-icons
+          - dashboard-icons
 
 build:binary:gnu:
   extends:
@@ -157,15 +163,28 @@ build:binary:musl:release:
   image:
     name: gcr.io/go-containerregistry/crane/debug:v0.15.2
     entrypoint: [""]
+  before_script:
+    - export IMAGE_ARTIFACT="$([ -z $ICONS ] && echo "image-no-icons.tar" || echo "image-dashboard-icons.tar")"
+    - echo -e "Using $IMAGE_ARTIFACT"
   needs:
-    - build:container
+    - job: build:container
+      parallel:
+        matrix:
+          - ICONS:
+              - no-icons
+              - dashboard-icons
+  parallel:
+    matrix:
+      - ICONS:
+          - "" # Equivalent to no-icons
+          - -dashboard-icons
 
 push:
   extends: .push
   script:
     - crane auth login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
-    - crane push image.tar ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
-    - crane push image.tar ${CI_REGISTRY_IMAGE}:latest
+    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}${ICONS}
+    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:latest${ICONS}
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
 
@@ -175,8 +194,8 @@ push:release:
     - .release
   script:
     - crane auth login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
-    - crane push image.tar ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
-    - crane push image.tar ${CI_REGISTRY_IMAGE}:stable
+    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}${ICONS}
+    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:stable${ICONS}
 
 release:
   extends: .release
@@ -185,6 +204,7 @@ release:
   needs:
     - build:binary:gnu:release
     - build:binary:musl:release
+    - push
     - push:release
   script:
     - echo "Creating release for $CI_COMMIT_TAG"

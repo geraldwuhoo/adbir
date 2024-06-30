@@ -2,7 +2,7 @@
 /out
 config.yaml
 .direnv
-image.tar
+image*.tar
 adbir_x86_64-unknown-linux-gnu
 adbir_x86_64-unknown-linux-musl
 .vscode

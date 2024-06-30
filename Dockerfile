@@ -1,3 +1,7 @@
+ARG ICONS=no-icons
+
+# BEGIN RUST BUILD
+
 # chef
 FROM docker.io/library/rust:1.79.0 AS chef
 RUN rustup target add x86_64-unknown-linux-musl && \
@@ -20,6 +24,30 @@ RUN cargo chef cook --release --target x86_64-unknown-linux-musl --recipe-path r
 COPY . .
 RUN cargo build --release --target x86_64-unknown-linux-musl --bin adbir
 
+# END RUST BUILD
+
+
+# BEGIN OPTIONAL ICON
+
+# get dashboard-icons
+FROM docker.io/curlimages/curl:8.8.0 AS dashboard-icons
+
+WORKDIR /out
+# hadolint ignore=DL4006
+RUN curl -o- -L "https://github.com/walkxcode/dashboard-icons/archive/refs/heads/main.tar.gz" | tar xzf - -C /out && \
+    mv -v /out/dashboard-icons-main /out/icons
+
+# dummy icons (none)
+FROM docker.io/library/alpine:3.20.1 AS no-icons
+RUN mkdir -vp /out/icons/png /out/icons/svg
+
+# Create selectable intermediate stage based on desired icons
+# hadolint ignore=DL3006
+FROM ${ICONS} AS icons
+
+# END OPTIONAL ICON
+
+
 # darkhttpd webserver to generate and host the files
 FROM docker.io/library/alpine:3.20.1
 
@@ -32,6 +60,8 @@ WORKDIR /public
 RUN chown ${UID}:${GID} /public
 COPY entrypoint.sh /entrypoint.sh
 COPY --from=builder --chown=${UID}:${GID} /usr/src/target/x86_64-unknown-linux-musl/release/adbir /usr/bin/adbir
+COPY --from=icons --chown=${UID}:${GID} /out/icons/png /public/icons/png
+COPY --from=icons --chown=${UID}:${GID} /out/icons/svg /public/icons/svg
 
 USER ${UID}:${GID}
 
