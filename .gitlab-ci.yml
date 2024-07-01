@@ -204,7 +204,6 @@ release:
   needs:
     - build:binary:gnu:release
     - build:binary:musl:release
-    - push
     - push:release
   script:
     - echo "Creating release for $CI_COMMIT_TAG"
