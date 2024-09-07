@@ -38,7 +38,7 @@ RUN curl -o- -L "https://github.com/walkxcode/dashboard-icons/archive/refs/heads
     mv -v /out/dashboard-icons-main /out/icons
 
 # dummy icons (none)
-FROM docker.io/library/alpine:3.20.2 AS no-icons
+FROM docker.io/library/alpine:3.20.3 AS no-icons
 RUN mkdir -vp /out/icons/png /out/icons/svg
 
 # Create selectable intermediate stage based on desired icons
@@ -49,7 +49,7 @@ FROM ${ICONS} AS icons
 
 
 # darkhttpd webserver to generate and host the files
-FROM docker.io/library/alpine:3.20.2
+FROM docker.io/library/alpine:3.20.3
 
 ENV UID 1000
 ENV GID 1000
