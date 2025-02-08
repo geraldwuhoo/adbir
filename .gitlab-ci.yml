@@ -161,7 +161,7 @@ build:binary:musl:release:
 .push:
   stage: push
   image:
-    name: gcr.io/go-containerregistry/crane/debug:v0.15.2
+    name: cgr.dev/chainguard/crane:latest-dev
     entrypoint: [""]
   before_script:
     - export IMAGE_ARTIFACT="$([ -z $ICONS ] && echo "image-no-icons.tar" || echo "image-dashboard-icons.tar")"
