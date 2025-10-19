@@ -29,7 +29,7 @@ variables:
 .lint:
   extends: .cache
   stage: lint
-  image: docker.io/library/rust:1.89.0
+  image: docker.io/library/rust:1.90.0
   before_script:
     - cargo version
     - rustup component add clippy
@@ -67,7 +67,7 @@ lint:format:
 .build_binary:
   extends: .cache
   stage: build
-  image: docker.io/library/rust:1.89.0
+  image: docker.io/library/rust:1.90.0
   needs: &build_needs
     - lint:clippy
     - lint:format
@@ -105,7 +105,7 @@ lint:format:
 build:container:
   stage: build
   image:
-    name: quay.io/buildah/stable:v1.40.1
+    name: quay.io/buildah/stable:v1.41.5
   variables:
     STORAGE_DRIVER: vfs
     BUILDAH_FORMAT: docker

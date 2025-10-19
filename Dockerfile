@@ -3,7 +3,7 @@ ARG ICONS=no-icons
 # BEGIN RUST BUILD
 
 # chef
-FROM docker.io/library/rust:1.89.0 AS chef
+FROM docker.io/library/rust:1.90.0 AS chef
 RUN rustup target add x86_64-unknown-linux-musl && \
     apt-get update && \
     apt-get install -y --no-install-recommends musl-tools=1.2.3-1 musl-dev=1.2.3-1 && \
@@ -30,7 +30,7 @@ RUN cargo build --release --target x86_64-unknown-linux-musl --bin adbir
 # BEGIN OPTIONAL ICON
 
 # get dashboard-icons
-FROM docker.io/curlimages/curl:8.15.0 AS dashboard-icons
+FROM docker.io/curlimages/curl:8.16.0 AS dashboard-icons
 
 WORKDIR /out
 # hadolint ignore=DL4006
@@ -38,7 +38,7 @@ RUN curl -o- -L "https://github.com/walkxcode/dashboard-icons/archive/refs/heads
     mv -v /out/dashboard-icons-main /out/icons
 
 # dummy icons (none)
-FROM docker.io/library/alpine:3.22.1 AS no-icons
+FROM docker.io/library/alpine:3.22.2 AS no-icons
 RUN mkdir -vp /out/icons/png /out/icons/svg
 
 # Create selectable intermediate stage based on desired icons
@@ -49,7 +49,7 @@ FROM ${ICONS} AS icons
 
 
 # darkhttpd webserver to generate and host the files
-FROM docker.io/library/alpine:3.22.1
+FROM docker.io/library/alpine:3.22.2
 
 ENV UID 1000
 ENV GID 1000
