@@ -30,7 +30,7 @@ RUN cargo build --release --target x86_64-unknown-linux-musl --bin adbir
 # BEGIN OPTIONAL ICON
 
 # get dashboard-icons
-FROM docker.io/curlimages/curl:8.17.0 AS dashboard-icons
+FROM docker.io/curlimages/curl:8.18.0 AS dashboard-icons
 
 WORKDIR /out
 # hadolint ignore=DL4006
