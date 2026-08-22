@@ -6,7 +6,7 @@ ARG ICONS=no-icons
 FROM docker.io/library/rust:1.98.0 AS chef
 RUN rustup target add x86_64-unknown-linux-musl && \
     apt-get update && \
-    apt-get install -y --no-install-recommends musl-tools=1.2.5-3 musl-dev=1.2.5-3 && \
+    apt-get install -y --no-install-recommends musl-tools=1.2.5-3.1~deb13u1 musl-dev=1.2.5-3.1~deb13u1 && \
     rm -rf /var/lib/apt/lists/*
 RUN cargo install cargo-chef
 WORKDIR /usr/src
@@ -63,6 +63,7 @@ COPY --from=builder --chown=${UID}:${GID} /usr/src/target/x86_64-unknown-linux-m
 COPY --from=icons --chown=${UID}:${GID} /out/icons/png /public/icons/png
 COPY --from=icons --chown=${UID}:${GID} /out/icons/svg /public/icons/svg
 
+# hadolint ignore=DL3066
 USER ${UID}:${GID}
 
 EXPOSE 8080
