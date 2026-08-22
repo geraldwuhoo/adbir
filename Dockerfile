@@ -54,7 +54,7 @@ FROM docker.io/library/alpine:3.24.1
 ENV UID 1000
 ENV GID 1000
 
-RUN apk add -U --no-cache darkhttpd=1.16-r0
+RUN apk add -U --no-cache darkhttpd=1.17-r0
 
 WORKDIR /public
 RUN chown ${UID}:${GID} /public
