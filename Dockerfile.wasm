@@ -40,7 +40,7 @@ RUN curl -o- -L "https://github.com/walkxcode/dashboard-icons/archive/refs/heads
     mv -v /out/dashboard-icons-main /out/icons
 
 # dummy icons (none)
-FROM --platform=${BUILDPLATFORM} docker.io/library/alpine:3.24.1 AS no-icons
+FROM --platform=${BUILDPLATFORM} docker.io/library/alpine:3.24.2 AS no-icons
 RUN mkdir -vp /out/icons/png /out/icons/svg
 
 # Create selectable intermediate stage based on desired icons
