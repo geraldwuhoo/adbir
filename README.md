@@ -12,6 +12,7 @@
 - [Running](#running)
   - [Pre-built binary](#pre-built-binary)
   - [Docker container](#docker-container)
+  - [Wasm container](#wasm-container)
   - [Building from source](#building-from-source)
 
 ## About
@@ -120,6 +121,10 @@ There are two flavors of the Docker container:
 1. Vanilla: `adbir:<tag>`. This version of the container just contains the webserver and nothing more.
 1. Dashboard Icons: `adbir:<tag>-dashboard-icons`. This version of the container also bundles [dashboard-icons](https://github.com/walkxcode/dashboard-icons) served at `/icons` in the webserver.
 
+Both flavors are published as a multi-platform index: `adbir:<tag>` resolves to
+the `linux/amd64` image, or to the wasm image below on a wasm shim. The
+individual platforms are also tagged `adbir:<tag>-amd64` and `adbir:<tag>-wasm`.
+
 An example `docker-compose.yaml`.
 
 ```yaml
@@ -143,6 +148,121 @@ Then run:
 ```
 $ docker-compose up -d
 $
+```
+
+### Wasm container
+
+`Dockerfile.wasm` builds a self-contained wasm OCI image: a single
+[wasi:http](https://github.com/WebAssembly/wasi-http) component that renders the
+dashboard in-process and serves it, with no shell and no bundled webserver.
+
+```
+$ buildah build --file Dockerfile.wasm --build-arg "ICONS=dashboard-icons" --tag adbir-wasm .
+$
+```
+
+It needs a host implementing `wasi:http`, which in practice means a
+wasmtime-based one -- WasmEdge does not implement the WASI 0.2 APIs. Both the
+`wasm32-wasip2` target and `wasmtime` are provided by the flake's dev shell:
+
+```
+$ wasmtime serve -S cli --dir ./::/ --env CONFIG_PATH=/config.yaml --env PUBLIC_DIR=/public adbir-serve.wasm
+Serving HTTP on http://0.0.0.0:8080/
+$
+```
+
+Configuration is by environment variable only, since a component has no `argv`:
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `CONFIG_PATH` | path to config file | `/config.yaml` |
+| `PUBLIC_DIR` | directory of static assets to serve | `/public` |
+
+Anything not matching `/` or `/index.html` is served from `PUBLIC_DIR`, which is
+where the `-dashboard-icons` flavor puts `/icons`.
+
+#### containerd
+
+Put `containerd-shim-wasmtime-v1` on containerd's `PATH`, then register it as a
+runtime. For containerd 2.x (config `version = 3`):
+
+```toml
+version = 3
+
+[plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.wasmtime]
+  runtime_type = 'io.containerd.wasmtime.v1'
+```
+
+On containerd 1.7 (`version = 2`) the plugin key is `io.containerd.grpc.v1.cri`.
+The shim listens on `0.0.0.0:8080` and preopens the container rootfs, so
+`CONFIG_PATH` and `PUBLIC_DIR` resolve without extra mounts.
+
+#### Kubernetes
+
+The image is `FROM scratch`, so the config has to come from a volume:
+
+```yaml
+---
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: wasmtime
+handler: wasmtime
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adbir
+data:
+  config.yaml: |
+    title: My Dashboard
+    services:
+      - name: Media
+        items:
+          - name: Jellyfin
+            url: https://jellyfin.example.com
+            logo: /icons/svg/jellyfin.svg
+            subtitle: Media server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adbir
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adbir
+  template:
+    metadata:
+      labels:
+        app: adbir
+    spec:
+      runtimeClassName: wasmtime
+      containers:
+        - name: adbir
+          image: registry.wuhoo.xyz/jerry/adbir:stable-wasm-dashboard-icons
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: config
+              mountPath: /config.yaml
+              subPath: config.yaml
+      volumes:
+        - name: config
+          configMap:
+            name: adbir
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adbir
+spec:
+  selector:
+    app: adbir
+  ports:
+    - port: 80
+      targetPort: 8080
 ```
 
 ### Building from source

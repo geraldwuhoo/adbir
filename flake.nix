@@ -18,11 +18,13 @@
         packages = with pkgs; [
           (rust-bin.stable.latest.default.override {
             extensions = [ "rust-src" "rust-analyzer" ];
+            targets = [ "wasm32-wasip2" ];
           })
           pkg-config
           cargo-audit
           pre-commit
           cargo-watch
+          wasmtime
         ];
       in {
         devShells.default = pkgs.mkShell {

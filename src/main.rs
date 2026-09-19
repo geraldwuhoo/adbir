@@ -1,40 +1,7 @@
-mod helpers;
-
+use adbir::{helpers::errors::AdbirError, Config, HomeTemplate};
 use askama::Template;
 use clap::Parser;
-use serde::Deserialize;
-use std::{
-    fs::{File, OpenOptions},
-    io::{BufReader, BufWriter},
-    path::Path,
-};
-
-use crate::helpers::errors::AdbirError;
-
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-struct Service {
-    name: String,
-    url: String,
-    logo: Option<String>,
-    subtitle: String,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-struct ServiceGroup {
-    name: String,
-    items: Vec<Service>,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-struct Config {
-    title: String,
-    subtitle: Option<String>,
-    image: Option<String>,
-    services: Vec<ServiceGroup>,
-}
+use std::{fs::OpenOptions, io::BufWriter, path::Path};
 
 #[derive(Debug, Parser)]
 #[command(author, version, about, long_about = None)]
@@ -48,18 +15,12 @@ struct Args {
     config_path: String,
 }
 
-#[derive(Debug, Template)]
-#[template(path = "index.html")]
-struct HomeTemplate {
-    config: Config,
-}
-
 fn main() -> Result<(), AdbirError> {
     let args = Args::parse();
     println!("Started with args: {:?}", args);
 
     println!("Reading from {}", args.config_path);
-    let config: Config = serde_yaml::from_reader(BufReader::new(File::open(&args.config_path)?))?;
+    let config = Config::from_path(&args.config_path)?;
 
     println!("Opening output directory file");
     let out_file = OpenOptions::new()
@@ -69,7 +30,7 @@ fn main() -> Result<(), AdbirError> {
         .open(Path::new(&args.out_dir).join("index.html"))?;
 
     println!("Rendering and writing template to output file");
-    HomeTemplate { config }.write_into(&mut BufWriter::new(out_file))?;
+    HomeTemplate::new(config).write_into(&mut BufWriter::new(out_file))?;
 
     Ok(())
 }

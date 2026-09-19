@@ -2,6 +2,7 @@ stages:
   - lint
   - build
   - push
+  - finalize
   - release
 
 workflow:
@@ -158,6 +159,84 @@ build:binary:musl:release:
     - .build_binary:musl
     - .release
 
+build:container:wasm:
+  stage: build
+  image:
+    name: quay.io/buildah/stable:v1.43.2
+  variables:
+    STORAGE_DRIVER: vfs
+    BUILDAH_FORMAT: oci
+    BUILDAH_ISOLATION: chroot
+    CGO_ENABLED: 0
+  needs: *build_needs
+  before_script:
+    - echo "${CI_REGISTRY_PASSWORD}" | buildah login -u "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
+  script:
+    - >-
+      buildah build
+      --layers
+      --platform wasip2/wasm
+      --annotation "module.wasm.image/variant=compat-smart"
+      --cache-to "${CI_REGISTRY_IMAGE}/build-cache-wasm"
+      --cache-from "${CI_REGISTRY_IMAGE}/build-cache-wasm"
+      --cache-ttl 168h0m0s
+      --tag ${CI_PROJECT_NAME}-wasm
+      --file Dockerfile.wasm
+      --build-arg "ICONS=${ICONS}"
+      .
+    # A directory: crane push reads anything else as a docker-style tarball.
+    - buildah push localhost/${CI_PROJECT_NAME}-wasm oci:image-wasm-${ICONS}
+  artifacts:
+    untracked: false
+    expire_in: 1 day
+    paths:
+      - image-wasm-${ICONS}/
+    when: on_success
+  parallel:
+    matrix:
+      - ICONS:
+          - no-icons
+          - dashboard-icons
+
+.push:wasm:
+  stage: push
+  image:
+    name: cgr.dev/chainguard/crane:latest-dev
+    entrypoint: [""]
+  before_script:
+    - export IMAGE_ARTIFACT="$([ -z $ICONS ] && echo "image-wasm-no-icons" || echo "image-wasm-dashboard-icons")"
+    - echo -e "Using $IMAGE_ARTIFACT"
+  needs:
+    - job: build:container:wasm
+      parallel:
+        matrix:
+          - ICONS:
+              - no-icons
+              - dashboard-icons
+  parallel:
+    matrix:
+      - ICONS:
+          - "" # Equivalent to no-icons
+          - -dashboard-icons
+
+push:wasm:
+  extends: .push:wasm
+  script:
+    - crane auth login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}-wasm${ICONS}
+    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:latest-wasm${ICONS}
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+
+push:wasm:release:
+  extends:
+    - .push:wasm
+    - .release
+  script:
+    - crane auth login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}-wasm${ICONS}
+    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:stable-wasm${ICONS}
+
 .push:
   stage: push
   image:
@@ -183,8 +262,8 @@ push:
   extends: .push
   script:
     - crane auth login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
-    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}${ICONS}
-    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:latest${ICONS}
+    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}-amd64${ICONS}
+    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:latest-amd64${ICONS}
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
 
@@ -194,8 +273,78 @@ push:release:
     - .release
   script:
     - crane auth login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
-    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}${ICONS}
-    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:stable${ICONS}
+    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}-amd64${ICONS}
+    - crane push $IMAGE_ARTIFACT ${CI_REGISTRY_IMAGE}:stable-amd64${ICONS}
+
+# crane infers each child's platform from its image config; manifest-tool
+# rejects every wasm os/arch as unsupported.
+.finalize:
+  stage: finalize
+  image:
+    name: cgr.dev/chainguard/crane:latest-dev
+    entrypoint: [""]
+  before_script:
+    - crane auth login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+  needs:
+    - job: push
+      parallel:
+        matrix:
+          - ICONS:
+              - ""
+              - -dashboard-icons
+    - job: push:wasm
+      parallel:
+        matrix:
+          - ICONS:
+              - ""
+              - -dashboard-icons
+  parallel:
+    matrix:
+      - ICONS:
+          - "" # Equivalent to no-icons
+          - -dashboard-icons
+
+finalize:multi-arch:
+  extends: .finalize
+  script:
+    - |
+      for TAG in "${CI_COMMIT_SHORT_SHA}" "latest"; do
+        echo "Building index ${CI_REGISTRY_IMAGE}:${TAG}${ICONS}"
+        crane index append \
+          -m "${CI_REGISTRY_IMAGE}:${TAG}-amd64${ICONS}" \
+          -m "${CI_REGISTRY_IMAGE}:${TAG}-wasm${ICONS}" \
+          -t "${CI_REGISTRY_IMAGE}:${TAG}${ICONS}"
+      done
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+
+finalize:multi-arch:release:
+  extends:
+    - .finalize
+    - .release
+  needs:
+    - job: push:release
+      parallel:
+        matrix:
+          - ICONS:
+              - ""
+              - -dashboard-icons
+    - job: push:wasm:release
+      parallel:
+        matrix:
+          - ICONS:
+              - ""
+              - -dashboard-icons
+  script:
+    - |
+      for TAG in "${CI_COMMIT_TAG}" "stable"; do
+        echo "Building index ${CI_REGISTRY_IMAGE}:${TAG}${ICONS}"
+        crane index append \
+          -m "${CI_REGISTRY_IMAGE}:${TAG}-amd64${ICONS}" \
+          -m "${CI_REGISTRY_IMAGE}:${TAG}-wasm${ICONS}" \
+          -t "${CI_REGISTRY_IMAGE}:${TAG}${ICONS}"
+      done
+
 
 release:
   extends: .release
@@ -205,6 +354,7 @@ release:
     - build:binary:gnu:release
     - build:binary:musl:release
     - push:release
+    - finalize:multi-arch:release
   script:
     - echo "Creating release for $CI_COMMIT_TAG"
   release:

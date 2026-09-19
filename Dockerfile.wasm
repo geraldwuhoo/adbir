@@ -1,0 +1,65 @@
+# Self-contained wasm OCI image: one wasi:http component, no shell, no webserver.
+# The final stage must stay pinned to --platform=wasip2/wasm; without it a plain
+# build stamps the host platform and no shim will accept the image.
+
+ARG BUILDPLATFORM
+ARG ICONS=no-icons
+
+# BEGIN RUST BUILD
+
+# chef
+FROM --platform=${BUILDPLATFORM} docker.io/library/rust:1.98.0 AS chef
+RUN rustup target add wasm32-wasip2 && \
+    cargo install cargo-chef
+WORKDIR /usr/src
+
+# planner
+FROM chef AS planner
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+# Builder
+FROM chef AS builder
+COPY --from=planner /usr/src/recipe.json recipe.json
+
+RUN cargo chef cook --release --target wasm32-wasip2 --features serve --recipe-path recipe.json
+COPY . .
+RUN cargo build --release --target wasm32-wasip2 --features serve --bin adbir-serve
+
+# END RUST BUILD
+
+
+# BEGIN OPTIONAL ICON
+
+# get dashboard-icons
+FROM --platform=${BUILDPLATFORM} docker.io/curlimages/curl:8.21.0 AS dashboard-icons
+
+WORKDIR /out
+# hadolint ignore=DL4006
+RUN curl -o- -L "https://github.com/walkxcode/dashboard-icons/archive/refs/heads/main.tar.gz" | tar xzf - -C /out && \
+    mv -v /out/dashboard-icons-main /out/icons
+
+# dummy icons (none)
+FROM --platform=${BUILDPLATFORM} docker.io/library/alpine:3.24.1 AS no-icons
+RUN mkdir -vp /out/icons/png /out/icons/svg
+
+# Create selectable intermediate stage based on desired icons
+# hadolint ignore=DL3006
+FROM ${ICONS} AS icons
+
+# END OPTIONAL ICON
+
+
+# hadolint ignore=DL3029
+FROM --platform=wasip2/wasm scratch
+
+ENV CONFIG_PATH=/config.yaml
+ENV PUBLIC_DIR=/public
+
+COPY --from=builder /usr/src/target/wasm32-wasip2/release/adbir-serve.wasm /adbir-serve.wasm
+COPY --from=icons /out/icons/png /public/icons/png
+COPY --from=icons /out/icons/svg /public/icons/svg
+
+EXPOSE 8080
+
+ENTRYPOINT ["/adbir-serve.wasm"]
