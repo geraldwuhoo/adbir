@@ -5,18 +5,15 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[features]
-# wasm32-wasip2 only
-serve = ["dep:wstd"]
+# adbir-serve builds for wasm32-wasip2 only, so it stays out of default-members:
+# plain `cargo build`/`cargo clippy` here still mean the host binary alone.
+[workspace]
+members = [".", "crates/adbir-serve"]
+default-members = ["."]
 
 [[bin]]
 name = "adbir"
 path = "src/main.rs"
-
-[[bin]]
-name = "adbir-serve"
-path = "src/bin/adbir-serve.rs"
-required-features = ["serve"]
 
 [dependencies]
 askama = "0.16.0"
@@ -30,9 +27,6 @@ strip = true
 lto = true
 opt-level = 3
 codegen-units = 1
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-wstd = { version = "0.6.8", optional = true, default-features = false }
 
 [target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies]
 openssl = { version = "0.10.81", features = ["vendored"] }

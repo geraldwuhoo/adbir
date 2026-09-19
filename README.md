@@ -156,6 +156,14 @@ $
 [wasi:http](https://github.com/WebAssembly/wasi-http) component that renders the
 dashboard in-process and serves it, with no shell and no bundled webserver.
 
+The component lives in its own crate, `crates/adbir-serve`, built as a
+`cdylib` rather than a `[[bin]]`. That is deliberate: a bin target also exports
+`wasi:cli/run`, and a host that dispatches on the first entrypoint it finds --
+runwasi's `containerd-shim-wasmtime` does -- then runs the component as a
+command, with no `wasi:http` in its linker. A `cdylib` produces a reactor
+component exporting `wasi:http/incoming-handler` alone, leaving nothing to
+pick wrong.
+
 ```
 $ buildah build --file Dockerfile.wasm --build-arg "ICONS=dashboard-icons" --tag adbir-wasm .
 $
@@ -166,10 +174,17 @@ wasmtime-based one -- WasmEdge does not implement the WASI 0.2 APIs. Both the
 `wasm32-wasip2` target and `wasmtime` are provided by the flake's dev shell:
 
 ```
-$ wasmtime serve -S cli --dir ./::/ --env CONFIG_PATH=/config.yaml --env PUBLIC_DIR=/public adbir-serve.wasm
+$ cargo build --release --target wasm32-wasip2 --package adbir-serve
+$ wasmtime serve -S cli --dir ./::/ --env CONFIG_PATH=/config.yaml --env PUBLIC_DIR=/public \
+    target/wasm32-wasip2/release/adbir_serve.wasm
 Serving HTTP on http://0.0.0.0:8080/
 $
 ```
+
+`-S cli` is required: the component reads its config from the filesystem and
+its settings from the environment, so the bare `wasi:http/proxy` world is not
+enough. Shim hosts link the full `wasi:cli` surface alongside `wasi:http`
+already.
 
 Configuration is by environment variable only, since a component has no `argv`:
 
@@ -198,6 +213,11 @@ The shim listens on `0.0.0.0:8080` and preopens the container rootfs, so
 `CONFIG_PATH` and `PUBLIC_DIR` resolve without extra mounts.
 
 #### Kubernetes
+
+The shim implements no `Exec`, so `kubectl exec`, `exec` probes and
+`lifecycle.postStart` hooks all fail against these pods -- anything the
+dashboard needs on disk (a `logo.webp` for the root `image:` key, say) has to
+be baked into the image or mounted. Use `httpGet` probes, not `exec` ones.
 
 The image is `FROM scratch`, so the config has to come from a volume:
 

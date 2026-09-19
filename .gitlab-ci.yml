@@ -57,6 +57,16 @@ lint:clippy:
   script:
     - cargo clippy -- -D warnings
 
+# adbir-serve is out of default-members, so `cargo clippy` above never sees it.
+lint:clippy:wasm:
+  extends:
+    - .lint
+  cache:
+    key: clippy-wasm
+  script:
+    - rustup target add wasm32-wasip2
+    - cargo clippy --package adbir-serve --target wasm32-wasip2 -- -D warnings
+
 lint:format:
   extends:
     - .lint
@@ -71,6 +81,7 @@ lint:format:
   image: docker.io/library/rust:1.98.1
   needs: &build_needs
     - lint:clippy
+    - lint:clippy:wasm
     - lint:format
   before_script:
     - cargo version

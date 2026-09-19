@@ -1,6 +1,7 @@
 **
 
 !src/**
+!crates/**
 !templates/**
 !Cargo.toml
 !Cargo.lock

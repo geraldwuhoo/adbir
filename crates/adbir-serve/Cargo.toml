@@ -1,0 +1,17 @@
+[package]
+name = "adbir-serve"
+version = "0.2.0"
+edition = "2021"
+
+# A cdylib, not a bin: rustc only emits a reactor component (one that exports
+# `wasi:http/incoming-handler` alone) for a library target. A `[[bin]]` also
+# exports `wasi:cli/run`, and runwasi's shim picks whichever of the two it
+# finds first in the export section -- landing on `run`, whose `wstd` stub is
+# unreachable!(), and whose linker has no `wasi:http`.
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+adbir = { path = "../.." }
+askama = "0.16.0"
+wstd = { version = "0.6.8", default-features = false }

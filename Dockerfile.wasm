@@ -22,9 +22,9 @@ RUN cargo chef prepare --recipe-path recipe.json
 FROM chef AS builder
 COPY --from=planner /usr/src/recipe.json recipe.json
 
-RUN cargo chef cook --release --target wasm32-wasip2 --features serve --recipe-path recipe.json
+RUN cargo chef cook --release --target wasm32-wasip2 --package adbir-serve --recipe-path recipe.json
 COPY . .
-RUN cargo build --release --target wasm32-wasip2 --features serve --bin adbir-serve
+RUN cargo build --release --target wasm32-wasip2 --package adbir-serve
 
 # END RUST BUILD
 
@@ -56,7 +56,8 @@ FROM --platform=wasip2/wasm scratch
 ENV CONFIG_PATH=/config.yaml
 ENV PUBLIC_DIR=/public
 
-COPY --from=builder /usr/src/target/wasm32-wasip2/release/adbir-serve.wasm /adbir-serve.wasm
+# cdylib, so cargo names the artifact after the lib target: adbir_serve.wasm.
+COPY --from=builder /usr/src/target/wasm32-wasip2/release/adbir_serve.wasm /adbir-serve.wasm
 COPY --from=icons /out/icons/png /public/icons/png
 COPY --from=icons /out/icons/svg /public/icons/svg
 

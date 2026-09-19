@@ -13,6 +13,14 @@ dependencies = [
  "serde",
  "serde_yaml",
  "thiserror",
+]
+
+[[package]]
+name = "adbir-serve"
+version = "0.2.0"
+dependencies = [
+ "adbir",
+ "askama",
  "wstd",
 ]
 
