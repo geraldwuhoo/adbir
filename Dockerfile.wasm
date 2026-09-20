@@ -32,7 +32,7 @@ RUN cargo build --release --target wasm32-wasip2 --package adbir-serve
 # BEGIN OPTIONAL ICON
 
 # get dashboard-icons
-FROM --platform=${BUILDPLATFORM} docker.io/curlimages/curl:8.21.0 AS dashboard-icons
+FROM --platform=${BUILDPLATFORM} docker.io/curlimages/curl:8.22.0 AS dashboard-icons
 
 WORKDIR /out
 # hadolint ignore=DL4006
