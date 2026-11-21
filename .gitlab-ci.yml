@@ -105,9 +105,11 @@ lint:format:
 build:container:
   stage: build
   image:
-    name: quay.io/buildah/stable:v1.46.1
+    name: quay.io/buildah/stable:v1.46.1@sha256:72b49c4af6c63850200cc8809d513691d61ceb440358faff305b540c4b9fc038
   variables:
-    STORAGE_DRIVER: vfs
+    STORAGE_DRIVER: overlay
+    # Native overlay; the image defaults to fuse-overlayfs, which needs /dev/fuse
+    STORAGE_OPTS: overlay.mountopt=nodev
     BUILDAH_FORMAT: docker
     BUILDAH_ISOLATION: chroot
     CGO_ENABLED: 0
