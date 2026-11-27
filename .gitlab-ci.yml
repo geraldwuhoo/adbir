@@ -105,7 +105,7 @@ lint:format:
 build:container:
   stage: build
   image:
-    name: quay.io/buildah/stable:v1.46.1@sha256:72b49c4af6c63850200cc8809d513691d61ceb440358faff305b540c4b9fc038
+    name: quay.io/buildah/stable:v1.46.1@sha256:04901e724c5d1db62672c48472fe4b2b85daeb910d8a6f48fb5c4910dbba52bc
   variables:
     STORAGE_DRIVER: overlay
     # Native overlay; the image defaults to fuse-overlayfs, which needs /dev/fuse
